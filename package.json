@@ -12,6 +12,9 @@
     "uuid": "^9.0.0"
   },
   "scripts": {
-    "start": "nodemon --inspect index.js localhost 3010"
+    "start": "nodemon --inspect index.js localhost 3020"
+  },
+  "engines": {
+    "node": "^18.4.0"
   }
 }
