@@ -65,7 +65,7 @@ class AuthController {
     }
 
     async logout(req, res, next) {
-        const query = `update users set refresh_token=null, access_token=null,last_date=${new Date()} where id=${req.params.id};`;
+        const query = `update users set refresh_token=null, access_token=null,last_date=CURRENT_TIMESTAMP where id=${req.params.id};`;
         connection.query(query, (e, r) => {
             if (e) next(e);
             res.clearCookie('refreshToken');
