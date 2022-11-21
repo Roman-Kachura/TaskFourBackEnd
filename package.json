@@ -14,7 +14,8 @@
   "scripts": {
     "start": "nodemon --inspect index.js localhost 3020"
   },
-  "engines": {
-    "node": "^18.4.0"
+  "devDependencies": {
+    "node": "^19.1.0",
+    "npm": "^9.1.2"
   }
 }
