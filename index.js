@@ -7,17 +7,18 @@ const app = express();
 const authRouter = require('./auth/authRouter');
 const usersRouter = require('./users/usersRouter');
 const port = process.env.PORT || 3020;
-const errorMiddlewares = require('./middlewares/error-middlewares');
-app.use(cors({
+const ApiError = require('./exeption/api-error')
+
+const option = {
     credentials: true,
-    origin: process.env.CLIENT_URL
-}));
+}
+app.use(cors(option))
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
-app.use(errorMiddlewares);
+app.use(ApiError.errorMiddleWares)
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 });

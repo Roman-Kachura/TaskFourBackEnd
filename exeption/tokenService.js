@@ -2,9 +2,7 @@ const jwt = require("jsonwebtoken");
 
 class TokenService {
     async generateToken(payload) {
-        const accessToken = await jwt.sign(payload, process.env.JWT_ACCESS_TOKEN, {expiresIn: '1d'});
-        const refreshToken = await jwt.sign(payload, process.env.JWT_REFRESH_TOKENYARN, {expiresIn: '30d'});
-        return {accessToken, refreshToken}
+        return  await jwt.sign(payload, process.env.JWT_ACCESS_TOKEN, {expiresIn: '30d'});
     }
 
     async validateAccessToken(token) {

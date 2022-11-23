@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
-const tokenService = require('../services/tokenService');
+const apiErrors = require('../exeption/api-error');
+const tokenService = require('../exeption/tokenService');
 const mysql = require("mysql");
+const dto = require('../exeption/dto');
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -8,70 +10,47 @@ const connection = mysql.createConnection({
     database: process.env.DB_NAME,
     password: process.env.DB_PASS
 });
-const dto = require('../dto/dto');
 
 class AuthController {
-    async registration(req, res, next) {
+    async registration(req, res) {
         const {name, email, password} = req.body;
-
-        connection.query(`select * from itransition.users where email='${email}';`, async (e, r) => {
-            if (e) next(e);
-            if (!!r && r.length) next({message: 'User with this email is already registered!'});
+        connection.query(`select * from users where email='${email}';`, async (e, r) => {
+            if (e) return apiErrors.responseError(500, e, res);
+            if (r.length) return apiErrors.responseError(406, 'User with this email is already registered!', res);
             const hash = bcrypt.hashSync(password, 7);
-            const {accessToken, refreshToken} = await tokenService.generateToken({name, email});
-            const query = `INSERT INTO users(name,email,password,access_token,refresh_token) values('${name}', '${email}', '${hash}','${accessToken}','${refreshToken}');`;
+            const token = await tokenService.generateToken({name, email});
+            const query = `INSERT INTO users(name,email,password,token) values('${name}', '${email}', '${hash}','${token}');`;
             connection.query(query, (e, r) => {
-                if (e) next(e);
-                res.cookie('refreshToken', refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true});
+                if (e) return apiErrors.responseError(500, e, res);
                 return res.json({
-                    id: r.insertId,
-                    isBlocked: false,
-                    registered: r.reg_date,
-                    lastDate: r.last_date,
-                    name,
-                    email,
-                    accessToken,
-                    refreshToken
+                    id: r.insertId, isBlocked: false, registered: r.reg_date, lastDate: r.last_date, token
                 })
             });
         });
     }
 
-    async login(req, res, next) {
+    async login(req, res) {
         const {email, password} = req.body;
-        connection.query(`select * from itransition.users where email='${email}';`, async (e, r) => {
-            if (!r.length) next({message: 'User with this email is not found!'});
-            if (!!r[0].is_blocked) next({message: 'User is blocked!'});
-            const isValidPassword = await bcrypt.compareSync(password, r[0].password);
-            if (!isValidPassword) next({message: 'Email or password is not correct!'});
-            const {accessToken, refreshToken} = await tokenService.generateToken({name: r[0].name, email});
-            const user = {
-                id: r[0].id,
-                isBlocked: !!r[0].is_blocked,
-                name: r[0].name,
-                registered: r[0].reg_date,
-                lastDate: r[0].last_date,
-                email,
-                accessToken,
-                refreshToken
-            };
-            const query = `update users set refresh_token='${refreshToken}', access_token='${accessToken}',last_date=CURRENT_TIMESTAMP where id='${r[0].id}'`;
-            connection.query(query, (e, r) => {
-                if (e) next(e);
-                res.cookie('refreshToken', refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true});
-                res.json(user);
+        const query = `select * from users where email='${email}';`
+        connection.query(query, async (e, r) => {
+            if (e) return apiErrors.responseError(500, e, res);
+            if (r.length === 0) return apiErrors.responseError(404, 'User with this email is not found!', res);
+            let u = r[0];
+            if (u && !!u.is_blocked) return apiErrors.responseError(423, 'User is blocked!', res);
+            const isValidPassword = await bcrypt.compareSync(password, u.password);
+            if (!isValidPassword) return apiErrors.responseError(406, 'Email or password is not correct!', res)
+            connection.query(`update users set last_date=CURRENT_TIMESTAMP where id='${u.id}';`, (e, r) => {
+                if (e) return apiErrors.responseError(500, e, res);
+                return res.json(dto.getAuthUserData(u));
             });
         });
     }
 
-    async logout(req, res, next) {
-        const query = `update users set refresh_token=null, access_token=null,last_date=CURRENT_TIMESTAMP where id=${req.params.id};`;
+    async logout(req, res) {
+        const query = `update users set last_date=CURRENT_TIMESTAMP where id=${req.params.id};`;
         connection.query(query, (e, r) => {
-            if (e) next(e);
-            res.clearCookie('refreshToken');
-            return res.json({
-                status: 'You are unauthorized!'
-            });
+            if (e) return apiErrors.responseError(500, e, res);
+            return res.json({});
         });
     }
 }

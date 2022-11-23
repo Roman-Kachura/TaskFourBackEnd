@@ -6,7 +6,7 @@ class Dto {
         return `${date} ${time}`
     }
 
-    userDto(u) {
+    getUserData(u) {
         return {
             id: u.id,
             isBlocked: !!u.is_blocked,
@@ -15,6 +15,12 @@ class Dto {
             lastDate: this.getDate(u.last_date),
             email: u.email
         };
+    }
+    getAuthUserData(u){
+        return{
+            token:u.token,
+            ...this.getUserData(u)
+        }
     }
 }
 

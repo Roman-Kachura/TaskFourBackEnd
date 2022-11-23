@@ -1,18 +1,14 @@
-module.exports = class ApiError extends Error {
-    status;
-    errors;
-
-    constructor(status, message, errors = []) {
-        super(message);
-        this.status = status;
-        this.errors = errors;
+class ApiError {
+    responseError(status, message, response) {
+        response.status(status);
+        return response.json({status, message});
     }
 
-    static UnauthorizedError() {
-        return new ApiError(401, 'User is not authorized!')
-    }
+    errorMiddleWares(err, req, res) {
+        if (typeof err === typeof Error) return res.status(err.status).json({message: err.message, errors: err.errors});
 
-    static BadRequest(message, errors = []) {
-        return new ApiError(400, message, errors);
+        return res.status(500).json({message: 'So-so, something went wrong!'})
     }
 }
+
+module.exports = new ApiError();
