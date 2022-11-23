@@ -11,6 +11,7 @@ const ApiError = require('./exeption/api-error')
 
 const option = {
     credentials: true,
+    origin:process.env.CLIENT_URL
 }
 app.use(cors(option))
 app.use(cookieParser());
