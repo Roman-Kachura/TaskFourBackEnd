@@ -16,6 +16,9 @@ const option = {
 app.use(cors(option))
 app.use(cookieParser());
 app.use(express.json());
+app.get('/check',(req,res)=>{
+    res.json({message:'Server works correctly!'})
+});
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use(ApiError.errorMiddleWares)
