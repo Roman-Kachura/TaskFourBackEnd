@@ -15,6 +15,7 @@ class UsersController {
         const query = `select * from users where id='${req.params.id}';`;
         connection.query(query, (e, r) => {
             if (e) ApiError.responseError(500, e, res);
+            if(r.length === 0) ApiError.responseError(500, 'User is not found!', res);
             return res.json(dto.getUserData(r[0]));
         })
     }
