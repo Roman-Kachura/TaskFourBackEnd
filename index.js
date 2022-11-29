@@ -15,8 +15,7 @@ const option = {
 }
 app.use(cors(option))
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
+app.use(express.json());
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use(ApiError.errorMiddleWares)
