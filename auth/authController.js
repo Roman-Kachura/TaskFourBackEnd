@@ -19,7 +19,7 @@ class AuthController {
             if (r.length) return apiErrors.responseError(406, 'User with this email is already registered!', res);
             const hash = bcrypt.hashSync(password, 7);
             const token = await tokenService.generateToken({name, email});
-            const query = `INSERT INTO users(name,email,password,token) values('${name}', '${email}', '${hash}','${token}');`;
+            const query = `INSERT INTO users(name,email,password,token,last_date) values('${name}', '${email}', '${hash}','${token}',CURRENT_TIMESTAMP);`;
             connection.query(query, (e, r) => {
                 if (e) return apiErrors.responseError(500, e, res);
                 return res.json({
